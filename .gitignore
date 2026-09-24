@@ -1,0 +1,14 @@
+.sso
+.env
+*.env
+!.env.example
+__pycache__/
+.venv/
+venv/
+node_modules/
+dist/
+*.pyc
+.pytest_cache/
+sde-cache/
+*.tsbuildinfo
+shots/

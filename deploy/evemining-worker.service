@@ -1,0 +1,15 @@
+[Unit]
+Description=Strata (mining.tovdc.com) ledger sync and price worker
+After=network.target postgresql.service redis-server.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/evemining/backend
+EnvironmentFile=/opt/evemining/backend/.env
+ExecStart=/opt/evemining/backend/.venv/bin/python -m app.worker
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

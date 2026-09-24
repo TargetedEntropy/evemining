@@ -1,0 +1,15 @@
+[Unit]
+Description=Strata (mining.tovdc.com) FastAPI backend
+After=network.target postgresql.service redis-server.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/evemining/backend
+EnvironmentFile=/opt/evemining/backend/.env
+ExecStart=/opt/evemining/backend/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8010 --workers 2 --proxy-headers
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
