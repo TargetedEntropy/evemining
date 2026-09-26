@@ -1353,3 +1353,401 @@ footer.site .wrap {
     margin-left: 0;
   }
 }
+
+/* ───────────── Structure finder ───────────── */
+
+.finder {
+  display: grid;
+  gap: 16px;
+  padding: 20px 0 24px;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+}
+
+.finder-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+
+.finder-row.secondary {
+  font-size: 14px;
+}
+
+.field-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.field-inline.grow {
+  flex: 1 1 320px;
+  max-width: 460px;
+}
+
+.field-inline .label {
+  color: var(--ink-3);
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.field-inline input[type='range'] {
+  width: 160px;
+  accent-color: var(--accent);
+}
+
+.jumps-out {
+  min-width: 64px;
+  font-variant-numeric: tabular-nums;
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.check input {
+  accent-color: var(--accent);
+}
+
+.check select,
+.report-form select,
+.report-form input,
+.combo input,
+.region-filter {
+  background: var(--plane);
+  border: 1px solid var(--rule-strong);
+  border-radius: var(--radius-m);
+  padding: 6px 10px;
+  color: var(--ink);
+}
+
+.combo {
+  position: relative;
+  flex: 1;
+}
+
+.combo input {
+  width: 100%;
+  font-size: 16px;
+  padding: 8px 12px;
+}
+
+.combo input:focus,
+.region-filter:focus,
+.report-form input:focus,
+.report-form select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.combo-meta {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 13px;
+  color: var(--ink-3);
+  pointer-events: none;
+}
+
+.combo-list {
+  left: 0;
+  right: auto;
+  width: 100%;
+  min-width: 300px;
+  list-style: none;
+  margin: 0;
+}
+
+.combo-list li {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.combo-list li.active {
+  background: var(--plane-2);
+}
+
+.combo-name {
+  color: var(--ink);
+}
+
+.region-picker {
+  position: relative;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.token {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px 4px 12px;
+  border-radius: var(--radius-m);
+  background: var(--plane-2);
+  font-size: 14px;
+}
+
+.token button {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--ink-3);
+  cursor: pointer;
+}
+
+.token button:hover {
+  color: var(--ink);
+  background: var(--plane);
+}
+
+.region-menu {
+  left: 0;
+  right: auto;
+  width: 340px;
+}
+
+.region-filter {
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+.region-scroll {
+  max-height: 360px;
+  overflow: auto;
+}
+
+.region-scroll fieldset {
+  border: 0;
+  margin: 0 0 6px;
+  padding: 0;
+}
+
+.region-scroll legend {
+  font-size: 12.5px;
+  color: var(--ink-3);
+  padding: 8px 8px 4px;
+}
+
+.region-scroll label {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--radius-s);
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.region-scroll label:hover {
+  background: var(--plane-2);
+}
+
+.region-scroll input {
+  accent-color: var(--accent);
+}
+
+table.places td {
+  vertical-align: top;
+}
+
+table.places .place-name {
+  font-weight: 500;
+}
+
+table.places .cell-main {
+  align-items: flex-start;
+}
+
+table.places .stack small + small {
+  color: var(--ink-2);
+}
+
+.cell-sub {
+  display: block;
+  font-size: 12.5px;
+}
+
+table.places td.keep {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+table.places tr.open td {
+  border-bottom-color: transparent;
+  background: color-mix(in srgb, var(--plane) 60%, transparent);
+}
+
+tr.details-row td {
+  background: color-mix(in srgb, var(--plane) 60%, transparent);
+  padding: 4px 0 24px;
+}
+
+.place-details {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 40px;
+  padding: 8px 12px 0 40px;
+}
+
+.place-details h3 {
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.place-details p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  max-width: 56ch;
+}
+
+.calc {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 6px 16px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.calc dt {
+  color: var(--ink-3);
+}
+
+.calc dd {
+  margin: 0;
+}
+
+.report-form {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.report-form label {
+  display: grid;
+  grid-template-columns: 110px 200px;
+  align-items: center;
+  gap: 16px;
+  font-size: 14px;
+  color: var(--ink-3);
+}
+
+.input-suffix {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-2);
+}
+
+.input-suffix input {
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  .place-details {
+    grid-template-columns: minmax(0, 1fr);
+    padding-left: 0;
+  }
+  .report-form label {
+    grid-template-columns: 90px 1fr;
+  }
+  .field-inline input[type='range'] {
+    width: 120px;
+  }
+}
+
+.more-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-top: 20px;
+  font-size: 14px;
+}
+
+.show-sm {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .show-sm {
+    display: inline;
+  }
+  table.places td.keep {
+    font-size: 14px;
+  }
+  .finder-row .segmented {
+    max-width: 100%;
+  }
+  .finder-row .check[style] {
+    margin-left: 0 !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .segmented {
+    max-width: 100%;
+    min-width: 0;
+  }
+  .section-head {
+    flex-wrap: wrap;
+  }
+  small.show-sm {
+    display: block;
+  }
+}
+
+table.places button.place-name {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+table.places button.place-name:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--rule-strong);
+  text-underline-offset: 3px;
+}
+
+/* Keeps visually-hidden captions/labels inside the scroll container instead of widening the page. */
+.table-wrap {
+  position: relative;
+}
+
+.finder-row > *,
+.field-inline.grow,
+.combo {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.combo input {
+  min-width: 0;
+}
+
+.finder {
+  grid-template-columns: minmax(0, 1fr);
+}

@@ -8,7 +8,7 @@ import asyncio
 import logging
 import time
 
-from app import pricing, sync
+from app import pricing, structures, sync
 from app.config import get_settings
 from app.database import SessionLocal
 
@@ -19,6 +19,7 @@ async def run_forever() -> None:
     s = get_settings()
     last_prices = 0.0
     last_affiliations = 0.0
+    last_structures = 0.0
     while True:
         try:
             async with SessionLocal() as db:
@@ -30,6 +31,10 @@ async def run_forever() -> None:
                 if time.monotonic() - last_affiliations > 6 * 3600 or last_affiliations == 0:
                     await sync.refresh_affiliations(db)
                     last_affiliations = time.monotonic()
+
+                if time.monotonic() - last_structures > 6 * 3600 or last_structures == 0:
+                    log.info("Public structures: %s", await structures.refresh_public_structures(db))
+                    last_structures = time.monotonic()
 
                 chars = await sync.due_characters(db)
                 for char in chars:

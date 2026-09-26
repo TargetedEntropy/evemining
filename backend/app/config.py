@@ -5,6 +5,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # Only the mining ledger. Keeping the scope list minimal is a feature: people are
 # handing us 5-20 alts each and should not have to trust us with wallets or assets.
 SCOPES = ["esi-industry.read_character_mining.v1"]
+# Opt-in, granted per character from the Structures page: lets Strata resolve public
+# structures and check whether that character is allowed to dock at them.
+STRUCTURE_SCOPE = "esi-universe.read_structures.v1"
 
 
 class Settings(BaseSettings):

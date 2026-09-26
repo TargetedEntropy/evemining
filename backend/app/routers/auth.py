@@ -9,7 +9,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import esi
-from app.config import SCOPES, get_settings
+from app.config import SCOPES, STRUCTURE_SCOPE, get_settings
 from app.database import SessionLocal, get_db
 from app.models import Character, LedgerEntry, User
 from app.schemas import user_payload
@@ -24,23 +24,37 @@ from app.security import (
     get_current_user,
     session_user_id,
 )
+from app.structures import refresh_public_structures
 from app.sync import sync_character
 
 log = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def _fail(reason: str) -> RedirectResponse:
-    return RedirectResponse(f"/?login_error={quote(reason)}", status_code=302)
+def _fail(reason: str, page: str = "/") -> RedirectResponse:
+    key = "login_error" if page == "/" else "error"
+    return RedirectResponse(f"{page}?{key}={quote(reason)}", status_code=302)
 
 
 @router.get("/auth/login")
-async def login(request: Request, strata_session: str | None = Cookie(None)):
-    """Send the browser to EVE SSO. If already signed in, the character becomes an alt."""
+async def login(request: Request, grant: str | None = None, strata_session: str | None = Cookie(None)):
+    """Send the browser to EVE SSO. If already signed in, the character becomes an alt.
+
+    grant=structures additionally asks for structure lookup (opt-in, per character).
+    """
     user_id = await session_user_id(request, strata_session)
+    wants_structures = grant == "structures" and user_id is not None
     state = secrets.token_urlsafe(32)
-    await request.app.state.redis.setex(f"{OAUTH_STATE_PREFIX}{state}", OAUTH_STATE_TTL, str(user_id or 0))
-    return RedirectResponse(esi.authorize_url(state), status_code=302)
+    await request.app.state.redis.setex(
+        f"{OAUTH_STATE_PREFIX}{state}", OAUTH_STATE_TTL, f"{user_id or 0}|{'structures' if wants_structures else ''}"
+    )
+    extra = [STRUCTURE_SCOPE] if wants_structures else None
+    return RedirectResponse(esi.authorize_url(state, extra), status_code=302)
+
+
+async def _resolve_structures() -> None:
+    async with SessionLocal() as db:
+        await refresh_public_structures(db)
 
 
 async def _sync_now(character_id: int) -> None:
@@ -64,18 +78,26 @@ async def callback(
     stored = await request.app.state.redis.getdel(f"{OAUTH_STATE_PREFIX}{state}")
     if stored is None:
         return _fail("That login link expired. Try again.")
-    session_user = int(stored) or None
+    uid, _, grant = stored.partition("|")
+    session_user = int(uid) or None
+    back = "/structures" if grant == "structures" else "/alts" if session_user else "/"
 
     try:
         tokens = await esi.exchange_code(code)
         info = await esi.verify_access_token(tokens["access_token"])
     except Exception:
         log.exception("SSO exchange failed")
-        return _fail("EVE SSO did not accept the login. Try again in a minute.")
+        return _fail("EVE SSO did not accept the login. Try again in a minute.", back)
 
     missing = set(SCOPES) - set(info["scopes"])
     if missing:
-        return _fail("The mining ledger permission was not granted.")
+        return _fail("The mining ledger permission was not granted.", back)
+    if grant == "structures" and STRUCTURE_SCOPE not in info["scopes"]:
+        return _fail(
+            "EVE did not grant structure lookup. The site admin needs to enable "
+            "esi-universe.read_structures.v1 on the EVE developer application.",
+            back,
+        )
 
     user = await db.get(User, session_user) if session_user else None
     char = await db.get(Character, info["character_id"])
@@ -131,8 +153,13 @@ async def callback(
         await db.commit()
 
     background.add_task(_sync_now, char.character_id)
+    if grant == "structures":
+        background.add_task(_resolve_structures)
 
-    target = f"/alts?{'added' if added else 'updated'}={char.character_id}" if session_user else "/"
+    if grant == "structures":
+        target = "/structures?granted=1"
+    else:
+        target = f"/alts?{'added' if added else 'updated'}={char.character_id}" if session_user else "/"
     response = RedirectResponse(target, status_code=302)
     response.set_cookie(
         SESSION_COOKIE,

@@ -147,3 +147,91 @@ class AuditLog(Base):
     target_id: Mapped[int | None] = mapped_column(BigInteger)
     details: Mapped[str | None] = mapped_column(Text)
     ip_address: Mapped[str | None] = mapped_column(String(64))
+
+
+# ───────────── Structure finder ─────────────
+
+
+class SdeStargate(Base):
+    """Directed gate edge; the SDE lists both directions."""
+
+    __tablename__ = "sde_stargates"
+
+    from_system_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    to_system_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+
+
+class SdeStation(Base):
+    __tablename__ = "sde_stations"
+
+    station_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=False)
+    name: Mapped[str] = mapped_column(String(255))
+    system_id: Mapped[int] = mapped_column(Integer, index=True)
+    type_id: Mapped[int] = mapped_column(Integer)
+    owner_id: Mapped[int] = mapped_column(Integer)
+    owner_name: Mapped[str | None] = mapped_column(String(255))
+    has_reprocessing: Mapped[bool] = mapped_column(Boolean)
+    reprocessing_efficiency: Mapped[float] = mapped_column(Float)
+    reprocessing_tax: Mapped[float] = mapped_column(Float)
+
+
+class SdeStructureType(Base):
+    """Upwell structure hulls with what matters for services, from SDE dogma."""
+
+    __tablename__ = "sde_structure_types"
+
+    type_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
+    name: Mapped[str] = mapped_column(String(255))
+    group_id: Mapped[int] = mapped_column(Integer)
+    group_name: Mapped[str] = mapped_column(String(64))
+    rig_size: Mapped[int | None] = mapped_column(Integer)
+    refining_bonus: Mapped[float] = mapped_column(Float, default=0)  # 0.055 for Tatara
+    can_reprocess: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class Structure(Base):
+    """A public Upwell structure, resolved through ESI with any authorised character."""
+
+    __tablename__ = "structures"
+
+    structure_id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=False)
+    name: Mapped[str | None] = mapped_column(String(255))
+    owner_id: Mapped[int | None] = mapped_column(BigInteger)
+    owner_name: Mapped[str | None] = mapped_column(String(255))
+    system_id: Mapped[int | None] = mapped_column(Integer, index=True)
+    type_id: Mapped[int | None] = mapped_column(Integer)
+    has_market: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    has_manufacturing: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
+    is_public: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    last_listed: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    resolve_status: Mapped[int | None] = mapped_column(Integer)
+
+
+class StructureAccess(Base):
+    """Whether a character may dock, per ESI (403 = not on the access list). Cached for a day."""
+
+    __tablename__ = "structure_access"
+
+    character_id: Mapped[int] = mapped_column(
+        ForeignKey("characters.character_id", ondelete="CASCADE"), primary_key=True
+    )
+    structure_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    allowed: Mapped[bool] = mapped_column(Boolean)
+    checked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
+class StructureReport(Base):
+    """What a pilot saw in game. ESI exposes neither services, rigs nor tax for structures."""
+
+    __tablename__ = "structure_reports"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    structure_id: Mapped[int] = mapped_column(BigInteger, index=True)
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"))
+    reporter_name: Mapped[str | None] = mapped_column(String(255))
+    has_reprocessing: Mapped[bool | None] = mapped_column(Boolean)
+    rig_tier: Mapped[int | None] = mapped_column(Integer)  # 0 none, 1 T1, 2 T2
+    tax: Mapped[float | None] = mapped_column(Float)  # 0.05 = 5%
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

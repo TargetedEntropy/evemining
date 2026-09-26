@@ -34,13 +34,13 @@ def client() -> httpx.AsyncClient:
     return _client
 
 
-def authorize_url(state: str) -> str:
+def authorize_url(state: str, extra_scopes: list[str] | None = None) -> str:
     s = get_settings()
     params = {
         "response_type": "code",
         "redirect_uri": s.eve_callback_url,
         "client_id": s.eve_client_id,
-        "scope": " ".join(SCOPES),
+        "scope": " ".join(SCOPES + (extra_scopes or [])),
         "state": state,
     }
     return f"{s.eve_authorize_url}?{urlencode(params)}"
@@ -136,6 +136,21 @@ async def mining_ledger(character_id: int, token: str) -> list[dict]:
         pages = int(r.headers.get("X-Pages", "1"))
         page += 1
     return rows
+
+
+async def public_structure_ids(service: str | None = None) -> list[int]:
+    r = await esi_get("/universe/structures/", params={"filter": service} if service else None)
+    r.raise_for_status()
+    return r.json()
+
+
+async def structure(structure_id: int, token: str) -> tuple[int, dict | None]:
+    """(status, body). 403 means this character is not on the structure's access list."""
+    r = await esi_get(f"/universe/structures/{structure_id}/", token)
+    if r.status_code == 429:
+        await asyncio.sleep(int(r.headers.get("Retry-After", "10")))
+        r = await esi_get(f"/universe/structures/{structure_id}/", token)
+    return r.status_code, (r.json() if r.status_code == 200 else None)
 
 
 async def affiliations(character_ids: list[int]) -> dict[int, dict]:

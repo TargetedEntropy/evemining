@@ -8,6 +8,7 @@ import Ores from './pages/Ores'
 import Overview from './pages/Overview'
 import Refining from './pages/Refining'
 import Settings from './pages/Settings'
+import Structures from './pages/Structures'
 import Systems from './pages/Systems'
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="ores" element={<Ores />} />
         <Route path="systems" element={<Systems />} />
         <Route path="refining" element={<Refining user={user} />} />
+        <Route path="structures" element={<Structures user={user} />} />
         <Route path="settings" element={<Settings user={user} />} />
         {user.is_admin && <Route path="admin" element={<Admin user={user} />} />}
         <Route path="*" element={<Navigate to="/" replace />} />

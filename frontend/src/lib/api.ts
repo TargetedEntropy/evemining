@@ -163,3 +163,73 @@ export interface AdminOverview {
   }[]
   audit: { timestamp: string; admin: string | null; action: string; target_id: number; details: string }[]
 }
+
+// ───────────── Structure finder ─────────────
+
+export type SystemTuple = [id: number, name: string, security: number, regionId: number]
+
+export interface RegionRow {
+  region_id: number
+  name: string
+  systems: number
+  structures: number
+  avg_security: number
+}
+
+export type ReprocessingStatus = 'confirmed' | 'likely' | 'possible' | 'npc' | 'none' | 'impossible' | 'unknown'
+
+export interface PlaceRow {
+  kind: 'structure' | 'station'
+  id: number
+  name: string | null
+  type_id: number | null
+  type_name: string | null
+  group_name: string | null
+  owner_id: number | null
+  owner_name: string | null
+  system_id: number
+  system_name: string
+  security: number
+  region: string | null
+  jumps: number | null
+  has_market: boolean | null
+  has_manufacturing: boolean | null
+  reprocessing: {
+    status: ReprocessingStatus
+    yield_min: number
+    yield_max: number
+    rig_tier: number | null
+    tax: number | null
+    tax_source: 'sde' | 'report' | null
+  }
+  report: { reported_at: string; reporter: string | null; reports: number } | null
+  net_yield_max: number
+}
+
+export interface SearchResult {
+  systems_searched: number
+  total: number
+  counts: { structures: number; stations: number }
+  results: PlaceRow[]
+}
+
+export interface StructureStatus {
+  listed: number
+  resolved: number
+  last_resolved_at: string | null
+  checkers: { character_id: number; name: string }[]
+}
+
+export const structuresApi = {
+  systems: () => request<SystemTuple[]>('/api/universe/systems'),
+  regions: () => request<RegionRow[]>('/api/universe/regions'),
+  status: () => request<StructureStatus>('/api/structures/status'),
+  search: (qs: string) => request<SearchResult>(`/api/structures/search?${qs}`),
+  access: (ids: number[]) =>
+    request<Record<string, Record<string, boolean>>>('/api/structures/access', {
+      method: 'POST',
+      body: JSON.stringify({ structure_ids: ids }),
+    }),
+  report: (id: number, body: { has_reprocessing?: boolean | null; rig_tier?: number | null; tax?: number | null }) =>
+    request<{ ok: boolean }>(`/api/structures/${id}/reports`, { method: 'POST', body: JSON.stringify(body) }),
+}

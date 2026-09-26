@@ -12,6 +12,7 @@ const NAV = [
   { to: '/ores', label: 'Ores' },
   { to: '/systems', label: 'Systems' },
   { to: '/refining', label: 'Refining' },
+  { to: '/structures', label: 'Structures' },
 ]
 
 export function Glyph({ size = 22 }: { size?: number }) {
@@ -183,7 +184,7 @@ function Filters({ user }: { user: User }) {
 
 export default function Shell({ user }: { user: User }) {
   const { pathname } = useLocation()
-  const showFilters = !['/settings', '/admin'].includes(pathname)
+  const showFilters = !['/settings', '/admin', '/structures'].includes(pathname)
   // Keep the range when moving between data pages.
   const { search } = useLocation()
 
@@ -197,7 +198,7 @@ export default function Shell({ user }: { user: User }) {
           </Link>
           <nav className="nav" aria-label="Main">
             {NAV.map((n) => (
-              <NavLink key={n.to} to={{ pathname: n.to, search }} end={n.end}>
+              <NavLink key={n.to} to={{ pathname: n.to, search: n.to === '/structures' || pathname === '/structures' ? '' : search }} end={n.end}>
                 {n.label}
               </NavLink>
             ))}

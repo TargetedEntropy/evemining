@@ -182,7 +182,7 @@ export default function Alts({ user }: { user: User }) {
           </button>
         </div>
       )}
-      {error && <div className="error-banner">{error}</div>}
+      {(error || params.get('error')) && <div className="error-banner">{error ?? params.get('error')}</div>}
 
       {alts.data ? (
         <SortTable caption="Alts" rows={rows} columns={columns} rowKey={(r) => r.character_id} initialSort="value" />

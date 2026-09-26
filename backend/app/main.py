@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from redis.asyncio import Redis
 
 from app.config import get_settings
-from app.routers import admin, auth, characters, stats
+from app.routers import admin, auth, characters, stats, structures
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 logging.getLogger("httpx").setLevel(logging.WARNING)
@@ -23,6 +23,7 @@ app.include_router(auth.router)
 app.include_router(characters.router)
 app.include_router(stats.router)
 app.include_router(admin.router)
+app.include_router(structures.router)
 
 
 @app.get("/api/health")

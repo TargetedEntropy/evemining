@@ -14,7 +14,7 @@ from datetime import UTC, date, datetime, timedelta
 from sqlalchemy import delete, select
 
 from app.database import SessionLocal
-from app.models import Character, LedgerEntry, SdeSystem, SdeType, User
+from app.models import Character, LedgerEntry, SdeSystem, SdeType, Structure, StructureReport, User
 from app.security import create_session_token, encrypt
 
 DEMO_BASE_ID = 9_000_000_000
@@ -29,6 +29,43 @@ MOON_ORES = ["Zeolites", "Sylvite", "Bitumens", "Coesite", "Cobaltite", "Euxenit
 ICE = ["Clear Icicle", "White Glaze", "Glacial Mass"]
 
 
+DEMO_STRUCTURE_BASE = 9_100_000_000_000
+DEMO_STRUCTURES = [
+    # system, hull type_id, name suffix, owner, report (has_reprocessing, rig, tax) or None
+    ("Osmon", 35835, "Ore Hole", "Deep Core Collective", (True, 2, 0.04)),
+    ("Sobaseki", 35836, "The Big Crusher", "Hollow Rock Industries", (True, 2, 0.10)),
+    ("Hek", 35835, "Minmatar Refining Co-op", "Brutor Scrap & Ore", (True, 1, 0.02)),
+    ("Nourvukaiken", 35835, "Lonely Athanor", "Silent Sifters", None),
+    ("Uedama", 35836, "Low Road Tatara", "Uedama Freeport", None),
+    ("Perimeter", 35832, "Trade Hub Annex", "Perimeter Logistics", (True, 0, 0.05)),
+    ("Jita", 35834, "Tranquility Trading Tower", "Jita Holdings", (False, None, None)),
+    ("Osmon", 35832, "Belt Watch", "Deep Core Collective", None),
+    ("Tama", 35836, "Lowsec Grinder", "Tama Ore Guild", (True, 2, 0.08)),
+    ("Kisogo", 35825, "Build Yard", "Forge Fabricators", None),
+    ("Sivala", 35835, "Crossroads Refinery", "Hollow Rock Industries", (None, None, 0.06)),
+    ("Ikuchi", 35835, "Moonlit Athanor", "Silent Sifters", None),
+]
+
+
+async def seed_structures(db) -> None:
+    await db.execute(delete(StructureReport).where(StructureReport.structure_id >= DEMO_STRUCTURE_BASE))
+    await db.execute(delete(Structure).where(Structure.structure_id >= DEMO_STRUCTURE_BASE))
+    names = [x[0] for x in DEMO_STRUCTURES]
+    systems = {s.name: s.system_id for s in (await db.execute(select(SdeSystem).where(SdeSystem.name.in_(names)))).scalars()}
+    hulls = {35832: "Astrahus", 35834: "Keepstar", 35825: "Raitaru", 35835: "Athanor", 35836: "Tatara"}
+    for i, (sysname, type_id, suffix, owner, rep) in enumerate(DEMO_STRUCTURES):
+        sid = DEMO_STRUCTURE_BASE + i
+        db.add(Structure(
+            structure_id=sid, name=f"{sysname} - Demo {suffix}", owner_id=98000000 + i, owner_name=owner,
+            system_id=systems[sysname], type_id=type_id, has_market=type_id in (35832, 35834),
+            has_manufacturing=type_id == 35825, is_public=True, resolved_at=datetime.now(UTC), resolve_status=200,
+        ))
+        if rep:
+            db.add(StructureReport(structure_id=sid, reporter_name="Oskar Venn", has_reprocessing=rep[0], rig_tier=rep[1], tax=rep[2]))
+    await db.commit()
+    print(f"{len(DEMO_STRUCTURES)} demo structures ({', '.join(sorted(set(hulls.values())))})")
+
+
 async def main(remove: bool) -> None:
     async with SessionLocal() as db:
         await db.execute(delete(User).where(User.id.in_(
@@ -36,8 +73,12 @@ async def main(remove: bool) -> None:
         )))
         await db.commit()
         if remove:
-            print("Demo user removed")
+            await db.execute(delete(StructureReport).where(StructureReport.structure_id >= DEMO_STRUCTURE_BASE))
+            await db.execute(delete(Structure).where(Structure.structure_id >= DEMO_STRUCTURE_BASE))
+            await db.commit()
+            print("Demo user and structures removed")
             return
+        await seed_structures(db)
 
         types = {t.name: t for t in (await db.execute(select(SdeType))).scalars()}
         systems = {s.name: s for s in (await db.execute(select(SdeSystem).where(SdeSystem.name.in_(SYSTEMS)))).scalars()}
